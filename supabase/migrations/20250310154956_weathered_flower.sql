@@ -61,3 +61,44 @@ CREATE POLICY "Users can delete their own connections"
   FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
+
+
+  CREATE TABLE users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text NOT NULL UNIQUE,
+  name text,
+  password text NOT NULL, -- Embora o Supabase gerencie as senhas de maneira segura, você pode armazená-las localmente se necessário.
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Definindo Row-Level Security para garantir que cada usuário acesse apenas seus dados
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Política de inserção (autenticação do usuário)
+CREATE POLICY "Users can insert their own data"
+  ON users
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
+
+-- Política para selecionar (acessar) os próprios dados
+CREATE POLICY "Users can view their own data"
+  ON users
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = id);
+
+-- Política para atualização dos dados do próprio usuário
+CREATE POLICY "Users can update their own data"
+  ON users
+  FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id);
+
+-- Política para deletar os dados do próprio usuário
+CREATE POLICY "Users can delete their own data"
+  ON users
+  FOR DELETE
+  TO authenticated
+  USING (auth.uid() = id);
